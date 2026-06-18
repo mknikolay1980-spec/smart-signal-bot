@@ -1,4 +1,0 @@
-fastapi==0.109.2
-uvicorn[standard]==0.27.1
-requests==2.31.0
-gunicorn==21.2.0
