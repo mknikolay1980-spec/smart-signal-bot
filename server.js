@@ -1,42 +1,62 @@
-const express = require('express')
-const app = express()
+const express = require('express');
+const axios = require('axios');
+const app = express();
 
-app.use(express.text({ type: '*/*' }))
+app.use(express.text({ type: '*/*' }));
+
+const PORT = process.env.PORT || 3000;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const CHANNEL_ID = process.env.CHANNEL_ID;
+const SECRET = process.env.SECRET;
 
 app.post('/telegram', async (req, res) => {
-  console.log('1. HAM BODY:', req.body)
-  console.log('2. ENV SECRET:', process.env.SECRET)
+  const hamBody = req.body || "";
+  console.log('1. HAM BODY:', hamBody);
 
-  let data
+  let data;
   try {
-    data = JSON.parse(req.body)
-  } catch(e) {
-    console.log('3. JSON PATLADI:', e.message)
-    return res.status(400).send('Bad JSON')
+    data = JSON.parse(hamBody);
+  } catch (e) {
+    console.log('3. JSON PATLADI:', e.message);
+    return res.status(400).send('Bad JSON');
   }
 
-  console.log('4. PARSE DATA:', data)
-
-  if(data.secret !== process.env.SECRET) {
-    console.log('5. SECRET UYUŞMUYOR. Gelen:', data.secret, 'Env:', process.env.SECRET)
-    return res.status(403).send('Forbidden')
+  if (data.secret !== SECRET) {
+    console.log('5. SECRET UYUŞMUYOR. Gelen:', data.secret, 'Env:', SECRET);
+    return res.status(403).send('Forbidden');
   }
 
-  const msg = `📊 ${data.symbol} ${data.action}\nEntry: ${data.entry}\nSL: ${data.sl}\nTP1: ${data.tp1}`
+  const actionEmoji = data.action === 'BUY' ? '🟢' : '🔴';
+  const chochText = data.is_choch === 'true' ? '\n<b>UYARI:</b> CHoCH - Trend dönüşü olabilir' : '';
+
+  const mesaj = `
+${actionEmoji} <b>${data.action} SİNYAL</b>
+<b>Parite:</b> ${data.ticker}
+<b>Entry:</b> ${parseFloat(data.price).toFixed(2)}
+<b>SL:</b> ${parseFloat(data.sl).toFixed(2)}
+<b>TP1:</b> ${parseFloat(data.tp1).toFixed(2)}
+<b>TP2:</b> ${parseFloat(data.tp2).toFixed(2)}
+<b>TP3:</b> ${parseFloat(data.tp3).toFixed(2)}
+<b>Skor:</b> ${data.score}/8${chochText}
+<b>Zaman:</b> ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
+`;
 
   try {
-    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHANNEL, text: msg })
-    })
-    console.log('6. TELEGRAM GÖNDERİLDİ')
-    res.status(200).send('OK')
-  } catch(err) {
-    console.log('7. TELEGRAM HATA:', err)
-    res.status(500).send('TG Error')
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      chat_id: CHANNEL_ID,
+      text: mesaj,
+      parse_mode: 'HTML'
+    });
+    console.log('6. TELEGRAM GÖNDERİLDİ');
+    res.status(200).send('OK');
+  } catch (err) {
+    console.log('7. TELEGRAM HATA:', err.message);
+    res.status(500).send('Telegram Error');
   }
-})
+});
 
-const PORT = process.env.PORT || 8080
-app.listen(PORT, () => console.log(`Bot running on port ${PORT}`))
+app.get('/', (req, res) => {
+  res.send('SMC Bot Webhook Calisiyor');
+});
+
+app.listen(PORT, () => console.log(`Server ${PORT} portunda`));
