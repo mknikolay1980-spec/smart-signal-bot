@@ -5,6 +5,8 @@ from fastapi import FastAPI, Request, HTTPException
 
 app = FastAPI()
 
+PORT = int(os.getenv("PORT", 8000))
+
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 TELEGRAM_CHANNEL = os.environ["TELEGRAM_CHANNEL"]
 TWELVEDATA_KEY = os.environ["TWELVEDATA_KEY"]
