@@ -27,17 +27,17 @@ app.post('/telegram', async (req, res) => {
   }
 
   const actionEmoji = data.action === 'BUY' ? '🟢' : '🔴';
+  const typeText = data.type ? ` (${data.type})` : '';
   const chochText = data.is_choch === 'true' ? '\n<b>UYARI:</b> CHoCH - Trend dönüşü olabilir' : '';
 
   const mesaj = `
-${actionEmoji} <b>${data.action} SİNYAL</b>
+${actionEmoji} <b>${data.action} SİNYAL${typeText}</b>
 <b>Parite:</b> ${data.ticker}
 <b>Entry:</b> ${parseFloat(data.price).toFixed(2)}
 <b>SL:</b> ${parseFloat(data.sl).toFixed(2)}
 <b>TP1:</b> ${parseFloat(data.tp1).toFixed(2)}
 <b>TP2:</b> ${parseFloat(data.tp2).toFixed(2)}
-<b>TP3:</b> ${parseFloat(data.tp3).toFixed(2)}
-<b>Skor:</b> ${data.score}/8${chochText}
+<b>TP3:</b> ${parseFloat(data.tp3).toFixed(2)}${chochText}
 <b>Zaman:</b> ${new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
 `;
 
